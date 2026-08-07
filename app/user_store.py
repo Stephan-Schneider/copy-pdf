@@ -1,8 +1,12 @@
 import shelve
+import os
 from app.routers.user import UserInDB
 import logging
 
 logger = logging.getLogger(__name__)
+
+def _get_db_path():
+    return os.getenv('COPY_PDF_USER_STORE', 'users')
 
 def add_user(user: UserInDB):
     """
@@ -24,7 +28,7 @@ def add_user(user: UserInDB):
         raise ValueError("User already exists")
 
     logger.info(f"Adding user: {user.username}")
-    with shelve.open('users', 'c', writeback=True) as db:
+    with shelve.open(_get_db_path(), 'c', writeback=True) as db:
         if "users" not in db:
             db["users"] = []
         db["users"].append(user)
@@ -41,12 +45,12 @@ def remove_user(username: str):
     :type username: str
     :return: None
     """
-    with shelve.open('users', 'c', writeback=True) as db:
+    with shelve.open(_get_db_path(), 'c', writeback=True) as db:
         if "users" in db:
             db["users"] = [user for user in db["users"] if user.username != username]
 
 def get_users() -> list[UserInDB]:
-    with shelve.open('users', 'c') as db:
+    with shelve.open(_get_db_path(), 'c') as db:
         try:
             return db["users"]
         except KeyError:
@@ -54,7 +58,7 @@ def get_users() -> list[UserInDB]:
             return []
 
 def get_user(username: str) -> UserInDB | None:
-    with shelve.open('users', 'c') as db:
+    with shelve.open(_get_db_path(), 'c') as db:
         try:
             return next(user for user in db["users"] if user.username == username)
         except StopIteration:

@@ -1,4 +1,7 @@
 import unittest
+import os
+import tempfile
+import shutil
 
 from app.routers.user import UserInDB
 import app.user_store as user_store
@@ -7,6 +10,17 @@ from pwdlib import PasswordHash
 password_hash = PasswordHash.recommended()
 
 class TestUserStore(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmpdir = tempfile.mkdtemp()
+        cls.db_path = os.path.join(cls.tmpdir, 'test_users')
+        os.environ['COPY_PDF_USER_STORE'] = cls.db_path
+
+    @classmethod
+    def tearDownClass(cls):
+        del os.environ['COPY_PDF_USER_STORE']
+        shutil.rmtree(cls.tmpdir)
 
     def setUp(self):
         hashed_password_1 = password_hash.hash("geheim")
