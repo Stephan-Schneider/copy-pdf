@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import FastAPI, File, Form, HTTPException, BackgroundTasks
 from fastapi.params import Depends
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 
 import app.transform.handle_upload as handle_upload
@@ -32,7 +33,7 @@ def read_root():
     return {"Hello": "World"}
 
 @app.post("/upload_file")
-def upload_file(
+async def upload_file(
         user: Annotated[User, Depends(get_current_user)],
         background_tasks: BackgroundTasks,
         file: Annotated[bytes, File()],
@@ -51,7 +52,7 @@ def upload_file(
         logger.info("Creating temporary file for upload")
         tmp_pdf = handle_upload.create_temp_file(file)
         pdf_handler = PDFHandler(tmp_pdf, num_pages, language)
-        output_file = pdf_handler.transform_pdf()
+        output_file = await pdf_handler.transform_pdf()
         logger.info(f"Temporary file created: {output_file}")
 
         background_tasks.add_task(remove_file, output_file)
@@ -67,3 +68,6 @@ def upload_file(
     except PDFError as e:
         logger.error(f"Failed to transform PDF: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+# Mount static files after all routes are defined !!
+app.mount("/", StaticFiles(directory="www"), name="frontend")

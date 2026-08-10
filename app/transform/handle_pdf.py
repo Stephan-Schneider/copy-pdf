@@ -1,4 +1,4 @@
-import subprocess
+import asyncio
 import os
 import logging
 from pathlib import Path
@@ -22,7 +22,7 @@ class PDFHandler:
         self.language = language
         self.in_file = pdf_file
 
-    def transform_pdf(self) -> str:
+    async def transform_pdf(self) -> str:
         """
         Transforms a PDF file by applying OCR (optical character recognition) to improve text
         searchability and readability. Optionally, specific pages can be extracted before performing
@@ -55,23 +55,28 @@ class PDFHandler:
             out_file_path = Path(out_file.name)
             out_file.close()
 
-            subprocess.run(
-                [
-                    "ocrmypdf",
-                    str(in_file_path),
-                    str(out_file_path),
-                    f"--language={self.language}",
-                    "--deskew",
-                    "--rotate-pages",
-                ],
-                check=True,
+            proc = await asyncio.create_subprocess_exec(
+                "ocrmypdf",
+                str(in_file_path),
+                str(out_file_path),
+                "-l", f"{self.language}",
+                "--skip-text",
+                "--deskew",
+                "--rotate-pages",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+
+            stdout, stderr = await proc.communicate()
+            return_code = proc.returncode
+            if return_code != 0:
+                logger.error(f"OCR process failed. Return code: {return_code}.")
+                if stderr:
+                    logger.error(f"Error: {stderr.decode()}")
+                raise PDFError("Fehler beim Umwandeln der Datei.")
 
             logger.info(f"Conversion of file {self.in_file.name} to {out_file.name} completed.")
             return out_file.name
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Error converting file: {e}")
-            raise PDFError("Fehler beim Umwandeln der Datei.")
         finally:
             os.unlink(self.in_file.name)
 
@@ -107,6 +112,16 @@ class PDFHandler:
             return sliced_out
 
     def list_of_pages_to_index(self) -> tuple:
+        """
+        Determines the list of pages to index from a given range or specific page numbers.
+
+        This method processes a list of page inputs which can include individual pages or
+        ranges in the form of "start-end". The processed pages are returned as a tuple of
+        zero-based indices.
+
+        :return: A tuple containing zero-based indices of the pages to be processed.
+        :rtype: tuple
+        """
         logger.info(f"List of pages to extract: {self.list_of_pages}")
         if len(self.list_of_pages) == 0:
             logger.info("No pages specified, processing full PDF.")

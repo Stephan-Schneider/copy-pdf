@@ -1,3 +1,4 @@
+import asyncio
 import unittest
 import os
 from tempfile import NamedTemporaryFile
@@ -35,7 +36,10 @@ class TestMain(unittest.TestCase):
         self.assertEqual(num_pages, (0, 1, 2, 3, 5, 7, 8, 9, 10))
 
     def test_transform_pdf(self):
-        file_name = self.pdf_handler.transform_pdf()
+        asyncio.run(self._transform_pdf())
+
+    async def _transform_pdf(self):
+        file_name = await self.pdf_handler.transform_pdf()
         self.assertTrue(Path(file_name).exists())
         # Cleanup
         if Path(file_name).exists():
