@@ -18,7 +18,7 @@ DUMMY_HASH = password_hash.hash("dummy_password")
 SECRET_KEY = "bfdfb90d09076195f05e7b7e6709a1a1bfcc2bec8ac9ceabb284e771e7553181"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/copy-pdf/auth/token")
 
 class Token(BaseModel):
     access_token: str

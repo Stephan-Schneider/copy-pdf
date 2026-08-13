@@ -23,7 +23,7 @@ class TestMain(unittest.TestCase):
         pdf_file = Path("~/Projekte/Konzepte/ocrpdf/multipage.pdf").expanduser()
 
         with pdf_file.open("rb") as f:
-            response = self.client.post("/upload_file", files={"file": f}, data=data)
+            response = self.client.post("/copy-pdf/upload_file", files={"file": f}, data=data)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.headers["content-type"], "application/pdf")
             self.assertTrue(response.content.startswith(b"%PDF"))

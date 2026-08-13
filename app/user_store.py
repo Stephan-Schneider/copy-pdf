@@ -6,7 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 def _get_db_path():
-    return os.getenv('COPY_PDF_USER_STORE', 'users')
+    path = os.getenv('COPY_PDF_USER_STORE', 'users')
+    logger.debug(f"Using user store path: {path}")
+    return path
 
 def add_user(user: UserInDB):
     """

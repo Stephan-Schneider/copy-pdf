@@ -15,7 +15,7 @@ from app.routers.user import User
 logger = setup_logging()
 
 app = FastAPI()
-app.include_router(user_router, prefix="/auth", tags=["auth"])
+app.include_router(user_router, prefix="/copy-pdf/auth", tags=["auth"])
 
 def remove_file(path: str):
     try:
@@ -27,12 +27,7 @@ def remove_file(path: str):
     except OSError as e:
         logger.error(f"Failed to remove temporary file: {e}")
 
-@app.get("/")
-def read_root():
-    logger.info("Root endpoint called")
-    return {"Hello": "World"}
-
-@app.post("/upload_file")
+@app.post("/copy-pdf/upload_file")
 async def upload_file(
         user: Annotated[User, Depends(get_current_user)],
         background_tasks: BackgroundTasks,
@@ -70,4 +65,4 @@ async def upload_file(
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # Mount static files after all routes are defined !!
-app.mount("/", StaticFiles(directory="www"), name="frontend")
+app.mount("/copy-pdf", StaticFiles(directory="www"), name="frontend")

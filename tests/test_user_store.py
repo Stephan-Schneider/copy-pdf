@@ -5,8 +5,10 @@ import shutil
 
 from app.routers.user import UserInDB
 import app.user_store as user_store
+from app.logging_config import setup_logging
 from pwdlib import PasswordHash
 
+logger = setup_logging()
 password_hash = PasswordHash.recommended()
 
 class TestUserStore(unittest.TestCase):
