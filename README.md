@@ -8,10 +8,12 @@ scanned PDF files, making them searchable and allowing text extraction.
 ## Prerequisites
 
 - **Python**: >= 3.12
-- **uv**: For dependency management.
+- **uv**: For dependency management and running the application.
 - **ocrmypdf**: Must be installed on your system (e.g., via `brew install ocrmypdf`
-or `apt-get install ocrmypdf`). For options to use the application without manually installing 
-**ocrmypdf**, please refer to the section **Deployment** below.
+or `apt-get install ocrmypdf`). For more information, see the [ocrmypdf documentation](https://ocrmypdf.readthedocs.io/en/stable/)
+or the **ocrmypdf** - Wiki for [ubuntuusers](https://wiki.ubuntuusers.de/OCRmyPDF/).
+- For options to use the application without manually installing 
+**ocrmypdf**, please refer to the section [Deployment](#Deployment) below.
 
 ## Installation
 
@@ -39,7 +41,7 @@ at `http://127.0.0.1:8000/docs`.
 - `POST /copy-pdf/auth/token`: Obtain an OAuth2 access token.
 - `POST /copy-pdf/upload_file`: Upload a PDF for OCR processing. Requires authentication.
     - `file`: The PDF file to process.
-    - `num_pages`: (Optional) List of page numbers or ranges (e.g., "1", "3-5") to extract.
+    - `num_pages`: (Optional) List of page numbers or ranges (e.g., "1", "3–5") to extract.
     - `language`: (Optional) Language for OCR (default: "deu+eng").
 
 ## Testing
@@ -57,7 +59,8 @@ uv run python3 -m unittest discover tests
 - `app/main.py`: FastAPI application entry point.
 - `app/routers/`: API route definitions (auth, user).
 - `app/transform/`: Core logic for PDF extraction and OCR processing.
-- `app/user_store.py`: Simple user data management.
+- `app/user_store.py`: Simple user data store.
+- `app/user_manager.py`: Command-line interface for user data management.
 - `tests/`: Project tests.
 - `pyproject.toml`: Project configuration and dependencies.
 
@@ -71,16 +74,39 @@ uv run python3 -m unittest discover tests
 
 ## Deployment
 
-The application can be tested by installing a docker image. On a Linux system with docker installed, type:
+The application can be tested locally without the need to manually install the **ocrmypdf** libraries 
+on your computer by running a docker container. The docker image contains all the necessary 
+dependencies and all application files.
+On a Linux system with docker installed, type:
 
 ```bash
 docker run -d -p 8000:8000 -v /local/path/to/user_store:/api_users -e COPY_PDF_USER_STORE=/api_users/users \
 --name copy-pdf schneiderstep/copy-pdf:test 
 ```
 Copy the attached users file in the local path for the user store.
-The credentials are:
+The credentials of the provided default user store are (don't use them in production):
 - username: testuser
 - password: geheim
+
+You can amend the user store with the `app/user_manager.py` script.
+
+List users:
+
+```bash
+uv run python3 -m app.user_manager list-users [-p|--path /path/to/user_store]
+```
+
+Add user:
+
+```bash
+uv run python3 -m app.user_manager add-user [-p|--path /path/to/user_store] --name USERNAME
+```
+
+Delete user:
+
+```bash
+uv run python3 -m app.user_manager delete-user [-p|--path /path/to/user_store] --name USERNAME
+```
 
 The application will be available at `http://localhost:8000/copy-pdf/index.html`.
 
@@ -88,4 +114,5 @@ To run the application with Caddy web-server, this project contains a docker-com
 as a template for deployment. Adapt the host paths to appropriate host directories on your machine.
 
 ## License
-MIT License (Pls. the LICENSE.txt file for further details)
+
+MIT License (Pls. see the LICENSE.txt file for further details)
